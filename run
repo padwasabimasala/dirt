@@ -1,0 +1,34 @@
+#!/usr/bin/env ruby
+# Example program crawls bebo.com
+$LOAD_PATH << File.expand_path(File.dirname(__FILE__)) + '/lib'
+begin
+  require 'private_data'
+rescue LoadError
+  STDERR.puts "You must create a private_data.rb with your bebo credentials"
+  STDERR.puts "e.g. echo \"\\$user = 'username'; \\$pass ='password'\" > private_data.rb"
+  exit 1
+end
+
+require 'rubygems'
+require 'bebo'
+require 'pp'
+
+if __FILE__ == $0
+  email = ARGV.first
+  raise "Usage: run <email>" if !email
+
+  crawler = Bebo::Crawler.new
+  result = crawler.crawl(email)
+  if result
+    output = {:id => result[:id]}
+    if result[:public_profile]
+      output.merge! Bebo::PublicProfileParser.new(result[:public_profile]).parse
+    end
+    if result[:friend_list]
+      output.merge! Bebo::FriendListParser.new(result[:friend_list]).parse
+    end
+    pp output
+  else
+    puts "No result"
+  end
+end
